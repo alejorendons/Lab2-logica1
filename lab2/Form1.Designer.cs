@@ -84,9 +84,8 @@
             this.respuesta.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Italic | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.respuesta.Location = new System.Drawing.Point(479, 128);
             this.respuesta.Name = "respuesta";
-            this.respuesta.Size = new System.Drawing.Size(14, 20);
+            this.respuesta.Size = new System.Drawing.Size(0, 20);
             this.respuesta.TabIndex = 4;
-            this.respuesta.Text = ":\r\n";
             this.respuesta.Click += new System.EventHandler(this.respuesta_Click);
             // 
             // panelGrafico2
@@ -140,6 +139,7 @@
             this.label3.Size = new System.Drawing.Size(701, 46);
             this.label3.TabIndex = 16;
             this.label3.Text = "Punto de corte en funciones lineales";
+            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label5
             // 

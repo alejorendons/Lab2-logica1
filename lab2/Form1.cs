@@ -13,10 +13,13 @@ namespace lab2
             this.panelGrafico2.Paint += new System.Windows.Forms.PaintEventHandler(this.panelGrafico2_Paint);
 
         }
-
+        /// <summary>
+        /// Evento que se dispara cuando el contenido del textBox1 cambia.
+        /// Valida el contenido y cambia el color del texto según su validez.
+        /// </summary>
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            if (!EsFuncionValida(textBox1.Text))
+            if (!validar(textBox1.Text))
             {
                 textBox1.ForeColor = Color.Red;
             }
@@ -25,10 +28,13 @@ namespace lab2
                 textBox1.ForeColor = Color.Black;
             }
         }
-
+        /// <summary>
+        /// Evento que se dispara cuando el contenido del textBox2 cambia.
+        /// Valida el contenido y cambia el color del texto según su validez.
+        /// </summary>
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
-            if (!EsFuncionValida(textBox2.Text))
+            if (!validar(textBox2.Text))
             {
                 textBox2.ForeColor = Color.Red;  // Cambia el color del texto a rojo si la función no es válida
             }
@@ -36,15 +42,18 @@ namespace lab2
             {
                 textBox2.ForeColor = Color.Black;  // Restablece el color del texto si la función es válida
             }
-        }       
-
+        }
+        /// <summary>
+        /// Evento que se dispara al hacer clic en el botón de solución.
+        /// Compara las dos ecuaciones lineales y muestra el resultado en el control "respuesta".
+        /// </summary>
         private void btnSolucion_Click(object sender, EventArgs e)
         {
             panelGrafico2.Invalidate();
             string funcion1 = textBox1.Text.Trim();
             string funcion2 = textBox2.Text.Trim();
 
-            if (!EsFuncionValida(funcion1) || !EsFuncionValida(funcion2))
+            if (!validar(funcion1) || !validar(funcion2))
             {
                 respuesta.Text = "Por favor, ingresa funciones válidas.";
                 return;
@@ -75,6 +84,10 @@ namespace lab2
             }
         }
 
+        /// <summary>
+        /// Evento que se dispara al hacer clic en el control "respuesta".
+        /// Muestra un mensaje con la relación entre las dos rectas.
+        /// </summary>
         private void respuesta_Click(object sender, EventArgs e)
         {            
             double m1, b1, m2, b2;
@@ -107,7 +120,10 @@ namespace lab2
 
             MessageBox.Show($"Las rectas se cruzan en el punto ({x}, {y}).");
         }
-
+        /// <summary>
+        /// Evento que se dispara al dibujar en el panel gráfico.
+        /// Dibuja los ejes y las líneas correspondientes a las ecuaciones ingresadas.
+        /// </summary>
         private void panelGrafico2_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -163,6 +179,13 @@ namespace lab2
                 g.DrawLine(Pens.Blue, p1, p2);
             }
         }
+        /// <summary>
+        /// Extrae los valores m (pendiente) y b (ordenada al origen) de una ecuación lineal.
+        /// </summary>
+        /// <param name="ecuacion">La ecuación lineal en forma de cadena.</param>
+        /// <param name="m">La pendiente extraída.</param>
+        /// <param name="b">La ordenada al origen extraída.</param>
+        /// <returns>True si la extracción fue exitosa, false en caso contrario.</returns>
 
         private bool ExtraerValores(string ecuacion, out double m, out double b)
         {
@@ -170,33 +193,60 @@ namespace lab2
             b = 0;
             ecuacion = ecuacion.ToLower().Replace(" ", "");
 
-            
-            Match matchGeneral = Regex.Match(ecuacion, @"y=(-?\d*\.?\d*)x([+\-]\d*\.?\d*)?$");           
-            Match matchPuntoPendiente = Regex.Match(ecuacion, @"y([+\-]\d*\.?\d*)=(-?\d*\.?\d*)\(x([+\-]\d*\.?\d*)\)$");
+            // Patrón para detectar la forma Y = x
+            Match matchSimple = Regex.Match(ecuacion, @"^y=x$");
+            Match matchGeneral = Regex.Match(ecuacion, @"y=(-?\d*,?\d*|-?\d+/\d+)x([+\-]\d*,?\d*|-?\d+/\d+)?$");
+            Match matchPuntoPendiente = Regex.Match(ecuacion, @"y([+\-]\d*,?\d*|-?\d+/\d+)=(-?\d*,?\d*|-?\d+/\d+)\(x([+\-]\d*,?\d*|-?\d+/\d+)\)$");
 
-            if (matchGeneral.Success)
+            if (matchSimple.Success)
             {
-                m = double.Parse(matchGeneral.Groups[1].Value);
-                b = matchGeneral.Groups[2].Success ? double.Parse(matchGeneral.Groups[2].Value) : 0;
+                m = 1;
+                b = 0;
+                return true;
+            }
+            else if (matchGeneral.Success)
+            {
+                m = ConvertirFraccionADecimal(matchGeneral.Groups[1].Value);
+                b = matchGeneral.Groups[2].Success ? ConvertirFraccionADecimal(matchGeneral.Groups[2].Value) : 0;
                 return true;
             }
             else if (matchPuntoPendiente.Success)
             {
-                double y1 = double.Parse(matchPuntoPendiente.Groups[1].Value);
-                m = double.Parse(matchPuntoPendiente.Groups[2].Value);
-                double x1 = double.Parse(matchPuntoPendiente.Groups[3].Value);
+                double y1 = ConvertirFraccionADecimal(matchPuntoPendiente.Groups[1].Value);
+                m = ConvertirFraccionADecimal(matchPuntoPendiente.Groups[2].Value);
+                double x1 = ConvertirFraccionADecimal(matchPuntoPendiente.Groups[3].Value);
                 b = y1 - m * x1;
                 return true;
             }
 
             return false;
         }
-
-        private bool EsFuncionValida(string funcion)
+        /// <summary>
+        /// Convierte una cadena que representa un número (con coma como separador decimal o en forma fraccional) a su valor decimal.
+        /// </summary>
+        /// <param name="valor">La cadena a convertir.</param>
+        /// <returns>El valor decimal correspondiente.</returns>
+        private double ConvertirFraccionADecimal(string valor)
         {
-           funcion = funcion.Replace(" ", "");
-            string patron1 = @"^y=(-?\d*\.?\d*)x([+\-]\d*)?$";
-            string patron2 = @"^y([+\-]\d*\.?\d*)=(-?\d*\.?\d*)\(x([+\-]\d*\.?\d*)\)$";
+            if (valor.Contains("/"))
+            {
+                var partes = valor.Split('/');
+                return double.Parse(partes[0].Replace(',', '.')) / double.Parse(partes[1].Replace(',', '.'));
+            }
+            return double.Parse(valor.Replace(',', '.'));
+        }
+        /// <summary>
+        /// Valida si una función es una ecuación lineal válida.
+        /// </summary>
+        /// <param name="funcion">La función a validar.</param>
+        /// <returns>True si la función es válida, false en caso contrario.</returns>
+
+        private bool validar(string funcion)
+        {
+            funcion = funcion.Replace(" ", "");
+            // Patrones modificados para incluir comas como separadores decimales
+            string patron1 = @"^y=(-?\d*,?\d*|-?\d+/\d+)x([+\-]\d*,?\d*|-?\d+/\d+)?$";
+            string patron2 = @"^y([+\-]\d*,?\d*|-?\d+/\d+)=(-?\d*,?\d*|-?\d+/\d+)\(x([+\-]\d*,?\d*|-?\d+/\d+)\)$";
 
             Regex regex1 = new Regex(patron1, RegexOptions.IgnoreCase);
             Regex regex2 = new Regex(patron2, RegexOptions.IgnoreCase);
@@ -204,7 +254,14 @@ namespace lab2
             return regex1.IsMatch(funcion) || regex2.IsMatch(funcion);
         }
 
+
+
         private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
         {
 
         }
